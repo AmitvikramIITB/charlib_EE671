@@ -3,7 +3,7 @@ name: Generate Liberty (.lib) Files
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Allows users to trigger it manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   characterize:
@@ -22,19 +22,24 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y ngspice libngspice0-dev
 
-      - name: Install Python Dependencies (CharLib & Volare)
+      - name: Install Python Dependencies (CharLib & Ciel)
         run: |
           python -m pip install --upgrade pip
           pip install git+https://github.com/infinitymdm/PySpice
-          pip install charlib volare
+          pip install charlib ciel
 
-      - name: Download sky130 PDK
+      - name: Download sky130 PDK via Ciel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /home/runner/pdk
-          volare enable --pdk sky130 default --pdk-root /home/runner/pdk
+          export PDK_ROOT=/home/runner/pdk
+          ciel enable --pdk-family sky130 78b7bc32ddb4b6f14f76883c2e2dc5b5de9d1cbc
 
       - name: Run CharLib Characterization
-        run: charlib run config/
+        run: |
+          export PDK_ROOT=/home/runner/pdk
+          charlib run config/
         
       - name: Upload .lib Artifacts
         uses: actions/upload-artifact@v4
