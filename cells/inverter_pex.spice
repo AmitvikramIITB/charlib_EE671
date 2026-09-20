@@ -1,7 +1,6 @@
-* Sky130 CMOS Inverter -- post-layout (PEX) netlist
-* Extracted from Magic (inverter.ext) via ext2spice, wrapped in a .subckt so
-* CharLib can characterize it. Port name/order must match config.yaml
-* (cell name "inverter", ports IN OUT VDD VSS).
+* Sky130 CMOS Inverter -- post-layout extracted netlist (parasitics included)
+* NOTE: CharLib finds the cell by grabbing the first line that mentions the
+* cell name next to the SUBCKT keyword, so keep those words out of comments.
 .subckt inverter IN OUT VDD VSS
 
 * Devices (drain gate source body model ...)
