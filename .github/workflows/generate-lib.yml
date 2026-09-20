@@ -33,18 +33,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p /home/runner/pdk
           export PDK_ROOT=/home/runner/pdk
+          mkdir -p $PDK_ROOT
           ciel enable --pdk-family sky130 78b7bc32ddb4b6f14f76883c2e2dc5b5de9d1cbc
-          
-          # Create a clean shortcut for the students' config file
-          ln -s /home/runner/pdk/sky130/versions/78b7bc32ddb4b6f14f76883c2e2dc5b5de9d1cbc/sky130A ./sky130A
+
+          echo "--- PDK_ROOT layout ---"
+          ls -la $PDK_ROOT
+
+          # ciel already creates $PDK_ROOT/sky130A; link to that
+          ln -sfn "$(readlink -f $PDK_ROOT/sky130A)" ./sky130A
+
+          # Fail here, with a clear message, if the model file isn't reachable
+          test -f sky130A/libs.tech/ngspice/sky130.lib.spice
 
       - name: Run CharLib Characterization
         run: |
           export PDK_ROOT=/home/runner/pdk
           charlib run config/
-        
+          echo "--- output dir ---"
+          ls -R output || true
+
       - name: Upload .lib Artifacts
         uses: actions/upload-artifact@v4
         with:
