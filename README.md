@@ -192,6 +192,16 @@ You didn't set the `area` field for that cell. Add `area: <value>` under the
 cell (see the reference table). Area comes from your physical layout — SPICE
 cannot know it.
 
+### `unable to determine direction for pin "..."`
+
+CharLib locates a cell by taking the **first line** in the netlist that
+contains the cell name next to the word `subckt` — and it does **not** skip
+`*` comment lines. If a comment mentions both (e.g. *"extracted from
+inverter.ext, wrapped in a .subckt"*), CharLib parses that comment as the port
+list and picks up junk pin names. **Keep your cell name and the `.subckt`
+keyword out of comment text** — only the real `.subckt` line should contain
+both.
+
 ### A characterization point failed
 
 Download the **`charlib-log`** artifact and read the tail of the log. Common
