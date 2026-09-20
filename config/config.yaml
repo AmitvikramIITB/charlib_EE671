@@ -1,9 +1,11 @@
 settings:
-  simulator: ngspice
-  corners:
-    - name: TT
-      temperature: 25
+  named_nodes:
+    primary_power:
+      name: VDD
       voltage: 1.8
+    primary_ground:
+      name: VSS
+      voltage: 0.0
 
 cells:
   inverter:
