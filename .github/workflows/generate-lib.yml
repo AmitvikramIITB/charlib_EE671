@@ -21,6 +21,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ngspice libngspice0-dev
+          ngspice --version | head -n 3
 
       - name: Install Python Dependencies (CharLib & Ciel)
         run: |
@@ -46,12 +47,29 @@ jobs:
           # Fail here, with a clear message, if the model file isn't reachable
           test -f sky130A/libs.tech/ngspice/sky130.lib.spice
 
+      - name: Show model lines in config
+        run: |
+          echo "--- models entries (each should end with a corner, e.g. 'tt') ---"
+          grep -rn "sky130.lib.spice" config/ || true
+
       - name: Run CharLib Characterization
         run: |
           export PDK_ROOT=/home/runner/pdk
-          charlib run config/
+          charlib run config/ > charlib.log 2>&1 || {
+            echo "=== last 80 lines of charlib.log ==="
+            tail -n 80 charlib.log | cut -c1-300
+            exit 1
+          }
           echo "--- output dir ---"
           ls -R output || true
+
+      - name: Upload CharLib log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: charlib-log
+          path: charlib.log
+          if-no-files-found: ignore
 
       - name: Upload .lib Artifacts
         uses: actions/upload-artifact@v4
