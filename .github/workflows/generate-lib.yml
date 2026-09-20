@@ -25,6 +25,7 @@ jobs:
       - name: Install Python Dependencies (CharLib & Ciel)
         run: |
           python -m pip install --upgrade pip
+          pip install "numpy<2"
           pip install git+https://github.com/stineje/CharLib.git@2.0.0
           pip install ciel
 
@@ -35,6 +36,9 @@ jobs:
           mkdir -p /home/runner/pdk
           export PDK_ROOT=/home/runner/pdk
           ciel enable --pdk-family sky130 78b7bc32ddb4b6f14f76883c2e2dc5b5de9d1cbc
+          
+          # Create a clean shortcut for the students' config file
+          ln -s /home/runner/pdk/sky130/versions/78b7bc32ddb4b6f14f76883c2e2dc5b5de9d1cbc/sky130A ./sky130A
 
       - name: Run CharLib Characterization
         run: |
