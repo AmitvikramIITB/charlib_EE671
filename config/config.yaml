@@ -1,10 +1,10 @@
 simulator: ngspice
 models:
-  - "/home/runner/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice"
+  - "sky130A/libs.tech/ngspice/sky130.lib.spice"
 corners:
   - name: TT
     temperature: 25
     voltage: 1.8
 cells:
-  - name: inverter
+  inverter:
     netlist: "cells/inverter.spice"
