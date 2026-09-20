@@ -62,13 +62,20 @@ tab → **Generate Liberty (.lib) Files** → **Run workflow**.
 ```
 .
 ├── cells/
-│   └── inverter.spice        # transistor-level SPICE netlist (the DUT)
+│   ├── inverter.spice          # pre-layout (schematic) netlist
+│   └── inverter_pex.spice      # post-layout (PEX / extracted) netlist
 ├── config/
-│   ├── config.yaml           # CharLib characterization config
-│   └── mc_switches.spice     # sky130 Monte-Carlo switches (see notes)
+│   ├── inverter_schematic.yaml # one config = one .lib (pre-layout)
+│   ├── inverter_pex.yaml       # one config = one .lib (post-layout)
+│   └── mc_switches.spice       # sky130 Monte-Carlo switches (see notes)
 └── .github/workflows/
-    └── generate-lib.yml       # CI: runs CharLib and uploads the .lib
+    └── generate-lib.yml         # CI: runs every config/*.yaml, uploads the .libs
 ```
+
+**One config file = one `.lib`.** The workflow runs **every** `config/*.yaml`
+file, each with its own `lib_name`, so all of them build in a single push.
+You never edit a shared file to switch between runs — you just add or edit the
+config for the variant you want.
 
 ---
 
@@ -93,9 +100,10 @@ XM2 OUT IN VDD VDD sky130_fd_pr__pfet_01v8 w=2.0 l=0.15
 - Pin order in the `.subckt` line is up to you, but the connections in the
   netlist must be correct.
 
-### Step 2 — Describe it in the config
+### Step 2 — Describe it in a config file
 
-Edit `config/config.yaml`:
+Create a **new** YAML in `config/` (one file per `.lib` you want, e.g.
+`config/mycell.yaml`). Each file is self-contained:
 
 ```yaml
 settings:
@@ -123,8 +131,18 @@ cells:
       - "OUT = !IN"                          # boolean function of the cell
 ```
 
-**To add a second cell**, add its netlist under `cells/` and a second entry
-under the `cells:` key (same shape, matching its `.subckt` name and function).
+**To add another cell or variant**, just drop a **new** YAML into `config/`
+(and its netlist into `cells/`). The workflow characterizes every
+`config/*.yaml` automatically — no need to touch existing files. Give each a
+distinct `lib_name` so the outputs don't collide.
+
+**Pre-layout vs. post-layout (PEX):** the `.lib` is only as accurate as the
+netlist you point at. A schematic netlist gives a *pre-layout* model; a
+netlist extracted from your layout with parasitics (Magic `ext2spice`) gives
+the accurate *post-layout / sign-off* model. This template ships both as an
+example (`inverter_schematic.yaml` / `inverter_pex.yaml`). An extracted netlist
+must still be wrapped in a `.subckt <cellname> IN OUT VDD VSS ... .ends` whose
+name and ports match the config — see `cells/inverter_pex.spice`.
 
 ### Step 3 — Commit and push
 

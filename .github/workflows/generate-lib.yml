@@ -57,11 +57,26 @@ jobs:
         run: |
           export PDK_ROOT=/home/runner/pdk
           mkdir -p output
-          charlib run config/ > charlib.log 2>&1 || {
+          shopt -s nullglob
+          # Characterize every config file in config/. Each YAML is a separate
+          # run with its own lib_name, so schematic + PEX (+ any cell a student
+          # adds) all build in one push -- no editing a shared config.
+          status=0
+          for cfg in config/*.yaml config/*.yml; do
+            echo "===================================================="
+            echo "=== Running CharLib on: $cfg"
+            echo "====================================================" >> charlib.log
+            echo "### $cfg" >> charlib.log
+            charlib run "$cfg" >> charlib.log 2>&1 || {
+              echo "!!! FAILED: $cfg (see charlib.log)"
+              status=1
+            }
+          done
+          if [ "$status" -ne 0 ]; then
             echo "=== last 80 lines of charlib.log ==="
             tail -n 80 charlib.log | cut -c1-300
             exit 1
-          }
+          fi
           # Collect any .lib CharLib wrote, wherever it put it
           find . -maxdepth 3 -name '*.lib' -not -path './output/*' \
             -exec cp {} output/ \;
