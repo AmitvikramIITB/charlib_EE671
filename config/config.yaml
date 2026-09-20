@@ -1,8 +1,10 @@
-simulator: ngspice
-corners:
-  - name: TT
-    temperature: 25
-    voltage: 1.8
+settings:
+  simulator: ngspice
+  corners:
+    - name: TT
+      temperature: 25
+      voltage: 1.8
+
 cells:
   inverter:
     netlist: "cells/inverter.spice"
