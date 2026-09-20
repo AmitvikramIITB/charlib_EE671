@@ -1,4 +1,8 @@
 settings:
+  lib_name: inverter_sky130_tt_1v80_025C
+  results_dir: output
+  temperature: 25
+
   named_nodes:
     primary_power:
       name: VDD
