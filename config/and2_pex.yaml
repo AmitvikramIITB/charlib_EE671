@@ -1,5 +1,5 @@
 settings:
-  lib_name: and2_sky130_tt_1v80_025C
+  lib_name: and2_sky130_tt_1v80_025C_pex
   results_dir: output
   temperature: 25
   named_nodes:
