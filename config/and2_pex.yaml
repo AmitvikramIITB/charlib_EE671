@@ -1,0 +1,26 @@
+settings:
+  lib_name: and2_sky130_tt_1v80_025C
+  results_dir: output
+  temperature: 25
+  named_nodes:
+    primary_power:
+      name: VDD
+      voltage: 1.8
+    primary_ground:
+      name: VSS
+      voltage: 0.0
+      
+cells:
+   inverter:
+     netlist: "cells/and2_pex.spice"
+     area: 16.495
+     models:
+     	- "config/mc_switches.spices"
+     	- "sky130A/libs.tech/ngspice/sky130.lib.spice tt"
+     data_slews: [0.001, 0.005, 0.01, 0.05]
+     loads: [0.001, 0.005, 0.01, 0.05]
+     functions:
+     	- "OUT = A & B"
+
+ 
+  
