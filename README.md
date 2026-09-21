@@ -63,10 +63,12 @@ tab → **Generate Liberty (.lib) Files** → **Run workflow**.
 .
 ├── cells/
 │   ├── inverter.spice          # pre-layout (schematic) netlist
-│   └── inverter_pex.spice      # post-layout (PEX / extracted) netlist
+│   ├── inverter_pex.spice      # post-layout (PEX / extracted) netlist
+│   └── dff.spice               # D flip-flop -- sequential, see gotchas
 ├── config/
 │   ├── inverter_schematic.yaml # one config = one .lib (pre-layout)
 │   ├── inverter_pex.yaml       # one config = one .lib (post-layout)
+│   ├── dff.yaml                # sequential example -- produces NO timing
 │   └── mc_switches.spice       # sky130 Monte-Carlo switches (see notes)
 └── .github/workflows/
     └── generate-lib.yml         # CI: runs every config/*.yaml, uploads the .libs
@@ -162,7 +164,10 @@ Push to `main`, then grab the `.lib` from the Actions artifacts (see above).
 | `models` | per-cell | SPICE files/libraries to include. `"file corner"` becomes a `.lib`; a bare `"file"` becomes an `.include`. |
 | `data_slews` | per-cell | Input transition times swept (ns). |
 | `loads` | per-cell | Output load capacitances swept (pF). |
-| `functions` | per-cell | Boolean logic function(s), e.g. `"OUT = !IN"`. |
+| `functions` | per-cell | Boolean logic function(s), e.g. `"OUT = !IN"`. For a flop, `"Q <= D"`. |
+| `clock` | per-cell | Clock pin + edge, e.g. `"posedge CLK"`. **Ignored by CharLib 2.0.0** — see gotchas. |
+| `state` | per-cell | Internal state feedback path, e.g. `"IQ = Q"`. **Ignored by CharLib 2.0.0.** |
+| `clock_slews` | per-cell | Clock transition times swept (ns). **Ignored by CharLib 2.0.0.** |
 
 The `tt` at the end of the sky130 model line selects the **typical-typical**
 process corner. Other corners include `ss` (slow), `ff` (fast), etc.
@@ -170,6 +175,59 @@ process corner. Other corners include `ss` (slow), `ff` (fast), etc.
 ---
 
 ## Notes & gotchas
+
+### Flip-flops and other sequential cells produce a `.lib` with no timing
+
+**CharLib 2.0.0 does not characterize sequential cells.** This is the single
+most confusing failure mode in this template, because *nothing fails*.
+
+Upstream deprecated the sequential timing procedures. From the CharLib user
+guide ("Example 3: OSU350 DFFSR Characterization"):
+
+> The timing procedures for sequential cells in CharLib 1.X were inaccurate
+> and have been deprecated as of CharLib 2.0.0. [...] This will be updated
+> when sequential cell characterization is restored.
+
+`cells/dff.spice` + `config/dff.yaml` are included as a ready-to-go example
+for when that happens. Run today, they give you:
+
+```liberty
+cell (dff) {
+  area : 19.50 ;
+  pin (D)   { direction : input ;  capacitance : 0.014597 ; }
+  pin (CLK) { direction : input ;  clock : true ;  capacitance : 0.011892 ; }
+  pin (Q)   { direction : output ; function : D ; }
+  pg_pin (VDD) { ... }  pg_pin (VSS) { ... }
+}
+```
+
+That is the **entire** cell. The pin capacitances are genuinely simulated and
+the pin metadata is right, but there are **no** `setup_rising` / `hold_rising`
+constraints, **no** CLK→Q `cell_rise` / `cell_fall`, no transitions, no `ff()`
+state group, and no power tables.
+
+Symptoms to recognize:
+
+- The run reports only **2** characterization points for a flop (the two pin
+  caps), versus **65** for the inverter.
+- The `.lib` is ~50 lines instead of ~94.
+- CharLib prints `Results written to ...`, exits `0`, and **CI goes green.**
+- The `clock`, `state`, and `clock_slews` keys are accepted and schema-checked,
+  then silently dropped. No warning appears in `charlib.log`.
+
+Because CI runs *every* `config/*.yaml`, a `dff_*.lib` **will** appear in your
+downloaded artifacts. Do not use it for timing analysis or hand it in as one.
+
+**If you need real flop timing**, read it from the signoff liberty that ships
+with the PDK rather than generating it:
+
+```
+sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+```
+
+Look up `sky130_fd_sc_hd__dfxtp_1` there for setup/hold and CLK→Q tables.
+(CharLib `1.0.0` will emit sequential timing, but upstream's own assessment is
+that those numbers are inaccurate — don't trust them for signoff.)
 
 ### Why `config/mc_switches.spice` exists
 

@@ -1,0 +1,34 @@
+* Sky130 positive-edge-triggered D flip-flop (master-slave, transmission gate)
+.subckt dff D CLK Q VDD VSS
+
+* ---- clock inverters: CLKB = !CLK, CLKBB = CLK ----
+XM1 CLKB  CLK   VDD VDD sky130_fd_pr__pfet_01v8 w=1.0  l=0.15
+XM2 CLKB  CLK   VSS VSS sky130_fd_pr__nfet_01v8 w=0.65 l=0.15
+XM3 CLKBB CLKB  VDD VDD sky130_fd_pr__pfet_01v8 w=1.0  l=0.15
+XM4 CLKBB CLKB  VSS VSS sky130_fd_pr__nfet_01v8 w=0.65 l=0.15
+
+* ---- master transmission gate: transparent while CLK = 0 ----
+XM5 N1 CLKB  D VSS sky130_fd_pr__nfet_01v8 w=1.0 l=0.15
+XM6 N1 CLKBB D VDD sky130_fd_pr__pfet_01v8 w=1.0 l=0.15
+
+* ---- master latch: M2 = !N1, weak feedback N1 = !M2 ----
+XM7  M2 N1 VDD VDD sky130_fd_pr__pfet_01v8 w=1.0  l=0.15
+XM8  M2 N1 VSS VSS sky130_fd_pr__nfet_01v8 w=0.65 l=0.15
+XM9  N1 M2 VDD VDD sky130_fd_pr__pfet_01v8 w=0.42 l=0.5
+XM10 N1 M2 VSS VSS sky130_fd_pr__nfet_01v8 w=0.42 l=0.5
+
+* ---- slave transmission gate: transparent while CLK = 1 ----
+XM11 N3 CLKBB M2 VSS sky130_fd_pr__nfet_01v8 w=1.0 l=0.15
+XM12 N3 CLKB  M2 VDD sky130_fd_pr__pfet_01v8 w=1.0 l=0.15
+
+* ---- slave latch: IQ = !N3 (the stored state), weak feedback N3 = !IQ ----
+XM13 IQ N3   VDD VDD sky130_fd_pr__pfet_01v8 w=1.0  l=0.15
+XM14 IQ N3   VSS VSS sky130_fd_pr__nfet_01v8 w=0.65 l=0.15
+XM15 N3 IQ   VDD VDD sky130_fd_pr__pfet_01v8 w=0.42 l=0.5
+XM16 N3 IQ   VSS VSS sky130_fd_pr__nfet_01v8 w=0.42 l=0.5
+
+* ---- output buffer: Q = !N3 ----
+XM17 Q N3 VDD VDD sky130_fd_pr__pfet_01v8 w=2.0 l=0.15
+XM18 Q N3 VSS VSS sky130_fd_pr__nfet_01v8 w=1.0 l=0.15
+
+.ends dff

@@ -1,0 +1,68 @@
+# ===================================================================
+#  D flip-flop (sequential cell) -- EXAMPLE / PLACEHOLDER CONFIG
+#
+#  READ THIS BEFORE USING THE .lib THIS PRODUCES.
+#
+#  CharLib 2.0.0 (the version pinned in .github/workflows) does NOT
+#  characterize sequential cells. Upstream deprecated the sequential
+#  timing procedures because the CharLib 1.x versions of them were
+#  inaccurate; see "Example 3: OSU350 DFFSR Characterization" in the
+#  CharLib user guide:
+#
+#     "The timing procedures for sequential cells in CharLib 1.X were
+#      inaccurate and have been deprecated as of CharLib 2.0.0. ...
+#      This will be updated when sequential cell characterization is
+#      restored."
+#
+#  So this config RUNS, EXITS 0, and writes a structurally valid .lib
+#  containing ONLY:
+#     - cell area
+#     - D and CLK input pin capacitances (these are really simulated)
+#     - CLK tagged `clock : true`, and `function : D` on Q
+#
+#  It does NOT contain setup_rising / hold_rising constraints, CLK->Q
+#  cell_rise / cell_fall, transitions, an ff() state group, or power.
+#  Nothing in the log warns you about this -- CI still goes green.
+#
+#  The sequential keys below (clock, state, clock_slews) are accepted
+#  and validated by CharLib, then silently ignored. They are kept here
+#  so this config is ready to go if/when upstream restores sequential
+#  support.
+#
+#  For real flop timing in a class assignment, use the signoff
+#  liberty that ships with the PDK instead:
+#     sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+# ===================================================================
+
+settings:
+  lib_name: dff_sky130_tt_1v80_025C_schematic
+  results_dir: output
+  temperature: 25
+
+  named_nodes:
+    primary_power:
+      name: VDD
+      voltage: 1.8
+    primary_ground:
+      name: VSS
+      voltage: 0.0
+
+cells:
+  dff:
+    netlist: "cells/dff.spice"
+    # Physical layout area in um^2 (not derivable from SPICE). Placeholder is
+    # the sky130 HD dfxtp_1 std-cell footprint; set to your real layout area.
+    area: 19.5
+    models:
+      - "config/mc_switches.spice"
+      - "sky130A/libs.tech/ngspice/sky130.lib.spice tt"
+    # --- accepted but IGNORED by CharLib 2.0.0 (see header) ---
+    clock: "posedge CLK"
+    state:
+      - "IQ = Q"
+    clock_slews: [0.01, 0.05, 0.1]
+    # ----------------------------------------------------------
+    functions:
+      - "Q <= D"
+    data_slews: [0.01, 0.05, 0.1, 0.2]
+    loads: [0.001, 0.005, 0.01, 0.05]
