@@ -15,8 +15,8 @@ cells:
      netlist: "cells/and2_pex.spice"
      area: 16.495
      models:
-     	- "config/mc_switches.spices"
-     	- "sky130A/libs.tech/ngspice/sky130.lib.spice tt"
+       - "config/mc_switches.spices"
+       - "sky130A/libs.tech/ngspice/sky130.lib.spice tt"
      data_slews: [0.001, 0.005, 0.01, 0.05]
      loads: [0.001, 0.005, 0.01, 0.05]
      functions:
