@@ -20,7 +20,7 @@ cells:
      data_slews: [0.001, 0.005, 0.01, 0.05]
      loads: [0.001, 0.005, 0.01, 0.05]
      functions:
-     	- "OUT = A & B"
+       - "OUT = A & B"
 
  
   
